@@ -3,14 +3,13 @@
  * Simple terminal-only startup without web interface
  */
 
-const chalk = require('chalk');
 require('./settings');
 
-console.log(chalk.cyan('🤖 Iniciando Knight Bot (Terminal Only)...'));
-console.log(chalk.yellow('📱 Bot WhatsApp - Modo Terminal'));
-console.log(chalk.green('✅ Dependências do Playwright instaladas'));
+console.log('🤖 Iniciando Knight Bot (Terminal Only)...');
+console.log('📱 Bot WhatsApp - Modo Terminal');
+console.log('✅ Dependências do Playwright instaladas');
 
 // Start the bot
 require('./index.js');
 
-console.log(chalk.blue('🚀 Bot iniciado com sucesso!'));
+console.log('🚀 Bot iniciado com sucesso!');

@@ -88,23 +88,18 @@ setInterval(() => {
     }
 }, 30_000) // check every 30 seconds
 
-let phoneNumber = "911234567890"
+let phoneNumber = "" // Remove número fixo
 let owner = JSON.parse(fs.readFileSync('./data/owner.json'))
 
 global.botname = "KNIGHT BOT"
 global.themeemoji = "•"
-const pairingCode = !!phoneNumber || process.argv.includes("--pairing-code")
-const useMobile = process.argv.includes("--mobile")
+const pairingCode = true // Sempre usar pairing code
+const useMobile = false // Nunca usar modo mobile
 
-// Only create readline interface if we're in an interactive environment
-const rl = process.stdin.isTTY ? readline.createInterface({ input: process.stdin, output: process.stdout }) : null
+// Always create readline interface for interactive input
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
 const question = (text) => {
-    if (rl) {
-        return new Promise((resolve) => rl.question(text, resolve))
-    } else {
-        // In non-interactive environment, use ownerNumber from settings
-        return Promise.resolve(settings.ownerNumber || phoneNumber)
-    }
+    return new Promise((resolve) => rl.question(text, resolve))
 }
 
 
@@ -249,12 +244,11 @@ async function startXeonBotInc() {
     if (pairingCode && !XeonBotInc.authState.creds.registered) {
         if (useMobile) throw new Error('Cannot use pairing code with mobile api')
 
-        let phoneNumber
-        if (!!global.phoneNumber) {
-            phoneNumber = global.phoneNumber
-        } else {
-            phoneNumber = await question(chalk.bgBlack(chalk.greenBright(`Please type your WhatsApp number 😍\nFormat: 6281376552730 (without + or spaces) : `)))
-        }
+        // Always ask for phone number in terminal
+        console.log(chalk.cyan('\n📱 ================================='))
+        console.log(chalk.cyan('🤖 KNIGHT BOT - PAIRING CODE'))
+        console.log(chalk.cyan('📱 ================================='))
+        let phoneNumber = await question(chalk.green('Digite seu número do WhatsApp (sem + e sem espaços)\nExemplo: 5511999998888\nSeu número: '))
 
         // Clean the phone number - remove any non-digit characters
         phoneNumber = phoneNumber.replace(/[^0-9]/g, '')
