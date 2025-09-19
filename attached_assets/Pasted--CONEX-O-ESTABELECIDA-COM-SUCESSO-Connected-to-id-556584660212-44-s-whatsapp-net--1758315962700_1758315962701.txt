@@ -1,0 +1,118 @@
+ CONEXÃO ESTABELECIDA COM SUCESSO! 🎉
+🌿Connected to => {
+  "id": "556584660212:44@s.whatsapp.net"
+}
+Closing stale open session for new outgoing prekey bundle
+Closing session: SessionEntry {
+  _chains: {
+    'BbSX+FRP894/Ol1FoixwbhIMfY1PE80MRcp5zFL6UVFK': { chainKey: [Object], chainType: 2, messageKeys: {} },
+    BfKys0PSaKX29esmEDGuRkTJl33ZuvcYo3DYIEDrR3YM: { chainKey: [Object], chainType: 1, messageKeys: {} }
+  },
+  registrationId: 1404283163,
+  currentRatchet: {
+    ephemeralKeyPair: {
+      pubKey: <Buffer 05 f2 b2 b3 43 d2 68 a5 f6 f5 eb 26 10 31 ae 46 44 c9 97 7d d9 ba f7 18 a3 70 d8 20 40 eb 47 76 0c>,
+      privKey: <Buffer 78 cb 59 67 0d 58 4e f3 2a 9d 08 87 28 30 11 1a f9 cd ed b0 61 24 a2 4a af 85 c3 90 a4 2b 6d 7b>
+    },
+    lastRemoteEphemeralKey: <Buffer 05 b4 97 f8 54 4f f3 de 3f 3a 5d 45 a2 2c 70 6e 12 0c 7d 8d 4f 13 cd 0c 45 ca 79 cc 52 fa 51 51 4a>,
+    previousCounter: 0,
+    rootKey: <Buffer 67 55 85 1e b5 5b 25 42 61 bd ea a3 26 2e c3 a3 ea 47 f6 2f f8 d8 9d 2d 19 9e ba 78 bc c3 c7 08>
+  },
+  indexInfo: {
+    baseKey: <Buffer 05 3a ad 9d 00 e3 fa 17 dd b6 94 44 e0 64 08 2a de fd df bb a7 2e 1b 51 e6 6d 0e 61 03 45 ad 1c 5f>,
+    baseKeyType: 2,
+    closed: -1,
+    used: 1758315323071,
+    created: 1758315323071,
+    remoteIdentityKey: <Buffer 05 cf 53 dd 4d 22 66 06 c8 4d 28 ae 2e 86 12 5f 01 7e 52 a9 c3 4f c7 d5 c6 33 5d 2d 91 01 31 6a 09>
+  }
+}
+📊 Current memory usage: 161.98MB
+📦 Mensagem grande detectada: 13181 bytes
+
+
+                  [ KNIGHT BOT ]
+
+
+< ================================================== >
+
+• YT CHANNEL: MR UNIQUE HACKER
+• GITHUB: mrunqiuehacker
+• WA NUMBER: 910000000000,917023951514
+• CREDIT: MR UNIQUE HACKER
+• 🤖 Bot Connected Successfully! ✅
+Bot Version: 2.1.8
+< ================================================== >
+📝 Command used in private: .s
+📝 Command used in group: .ship
+🎨 Buscando imagem de anime ship...
+🔍 Buscando imagens de anime ships...
+💻 Ambiente de desenvolvimento, usando Chromium local...
+❌ Erro ao buscar imagens: browserType.launch: 
+╔══════════════════════════════════════════════════════╗
+║ Host system is missing dependencies to run browsers. ║
+║ Please install them with the following command:      ║
+║                                                      ║
+║     sudo npx playwright install-deps                 ║
+║                                                      ║
+║ Alternatively, use apt:                              ║
+║     sudo apt-get install libglib2.0-0t64\            ║
+║         libnspr4\                                    ║
+║         libnss3\                                     ║
+║         libdbus-1-3\                                 ║
+║         libatk1.0-0t64\                              ║
+║         libatk-bridge2.0-0t64\                       ║
+║         libatspi2.0-0t64\                            ║
+║         libxcomposite1\                              ║
+║         libxdamage1\                                 ║
+║         libxext6\                                    ║
+║         libxfixes3\                                  ║
+║         libxrandr2\                                  ║
+║         libgbm1\                                     ║
+║         libxkbcommon0\                               ║
+║         libasound2t64                                ║
+║                                                      ║
+║ <3 Playwright Team                                   ║
+╚══════════════════════════════════════════════════════╝
+🔄 Usando imagens de fallback...
+📥 Tentativa 1: Baixando imagem...
+✅ Imagem baixada com sucesso via Axios!
+✅ Ship enviado com sucesso!
+📊 Memória após ship: 179.64MB
+Closing stale open session for new outgoing prekey bundle
+Closing session: SessionEntry {
+  _chains: {
+    'BcU2QVQpaleQTv09o1rN1Xi+nLYKWXhyaj47deOWPcBI': { chainKey: [Object], chainType: 2, messageKeys: {} },
+    BdanXTFZQaOzGdKFe2TBb8ZKUXqOdwk0yIPFNaVj3VVi: { chainKey: [Object], chainType: 2, messageKeys: {} },
+    'BQojd1y/VCxAW8pHelRh+CZpvpSzbwIIJBr5HVlzLiIf': { chainKey: [Object], chainType: 1, messageKeys: {} }
+  },
+  registrationId: 1404283163,
+  currentRatchet: {
+    ephemeralKeyPair: {
+      pubKey: <Buffer 05 0a 23 77 5c bf 54 2c 40 5b ca 47 7a 54 61 f8 26 69 be 94 b3 6f 02 08 24 1a f9 1d 59 73 2e 22 1f>,
+      privKey: <Buffer f8 61 64 66 d5 df 27 74 ba 09 32 16 33 74 8f b4 7b ae 8c 66 24 b3 01 02 8d 9d a0 9d c1 ed 22 4d>
+    },
+    lastRemoteEphemeralKey: <Buffer 05 d6 a7 5d 31 59 41 a3 b3 19 d2 85 7b 64 c1 6f c6 4a 51 7a 8e 77 09 34 c8 83 c5 35 a5 63 dd 55 62>,
+    previousCounter: 1,
+    rootKey: <Buffer f5 a5 7b 90 4a 7a 2c b2 5b 5d 15 13 ff d9 e8 8b e1 ca 0d 64 77 21 da 1b a2 d9 a8 b9 21 09 f7 07>
+  },
+  indexInfo: {
+    baseKey: <Buffer 05 49 9f d4 ec e1 27 d3 f6 89 30 8f 16 03 a5 a8 18 eb d4 32 eb b4 e9 31 94 d2 f5 f9 f5 d6 3b ac 64>,
+    baseKeyType: 1,
+    closed: -1,
+    used: 1758315354288,
+    created: 1758315323088,
+    remoteIdentityKey: <Buffer 05 cf 53 dd 4d 22 66 06 c8 4d 28 ae 2e 86 12 5f 01 7e 52 a9 c3 4f c7 d5 c6 33 5d 2d 91 01 31 6a 09>
+  }
+}
+> 🧹 Rate limiter cleanup: 1 users, 0 groups tracked
+📊 Current memory usage: 168.84MB
+📊 Current memory usage: 169.43MB
+🧹 Rate limiter cleanup: 0 users, 0 groups tracked
+📊 Current memory usage: 170.45MB
+📊 Current memory usage: 171.45MB
+🧹 Rate limiter cleanup: 0 users, 0 groups tracked
+📊 Current memory usage: 171.66MB
+📊 Current memory usage: 173.59MB
+> 🧹 Rate limiter cleanup: 0 users, 0 groups tracked
+📊 Current memory usage: 175.29MB
