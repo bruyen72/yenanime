@@ -133,10 +133,10 @@ async function stickerCommand(sock, chatId, message) {
         // If file is too large, try compression
         if (webpBuffer.length > 1000 * 1024) {
             const tempOutput2 = path.join(tmpDir, `sticker_compressed_${timestamp}.webp`);
-            const compressCmd = isAnimated 
+            const compressCmd = isAnimated
                 ? `ffmpeg -y -i "${tempInput}" -t 3 -vf "scale=400:400:force_original_aspect_ratio=decrease,fps=10,pad=400:400:(ow-iw)/2:(oh-ih)/2:color=#00000000" -c:v libwebp -quality 30 -compression_level 6 "${tempOutput2}"`
                 : `ffmpeg -y -i "${tempInput}" -vf "scale=400:400:force_original_aspect_ratio=decrease,pad=400:400:(ow-iw)/2:(oh-ih)/2:color=#00000000" -c:v libwebp -quality 50 -compression_level 6 "${tempOutput2}"`;
-            
+
             try {
                 await new Promise((resolve, reject) => {
                     exec(compressCmd, { maxBuffer: 1024 * 1024 * 10 }, (error) => {
@@ -144,7 +144,7 @@ async function stickerCommand(sock, chatId, message) {
                         else resolve();
                     });
                 });
-                
+
                 if (fs.existsSync(tempOutput2)) {
                     webpBuffer = fs.readFileSync(tempOutput2);
                     try { fs.unlinkSync(tempOutput2); } catch {}
