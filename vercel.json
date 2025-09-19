@@ -2,21 +2,29 @@
   "version": 2,
   "functions": {
     "api/**/*.js": {
-      "maxDuration": 30
+      "maxDuration": 300,
+      "memory": 1024
     }
   },
   "rewrites": [
     {
       "source": "/pair",
-      "destination": "/api/server"
+      "destination": "/api/index"
     },
     {
       "source": "/qr",
-      "destination": "/api/server"
+      "destination": "/api/index"
     },
     {
       "source": "/status",
-      "destination": "/api/server"
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }

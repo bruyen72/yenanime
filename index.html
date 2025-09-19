@@ -157,31 +157,36 @@
       <p class="subtitle">Interface de Demonstração</p>
     </div>
 
-    <div class="warning">
-      <h3><i class="fas fa-exclamation-triangle"></i> Aviso Importante</h3>
-      <p>Esta é apenas uma <strong>demonstração</strong> no Vercel. O bot completo não funciona em Serverless Functions devido a:</p>
-      <ul>
-        <li>Conexões WebSocket persistentes necessárias</li>
-        <li>Estado de sessão do WhatsApp</li>
-        <li>Limitações de timeout (10s-300s)</li>
-      </ul>
-    </div>
-
     <div class="demo-notice">
-      <h4><i class="fas fa-info-circle"></i> Para Usar o Bot Completo</h4>
-      <p>Implemente em um serviço persistente:</p>
+      <h4><i class="fas fa-info-circle"></i> WhatsApp Bot Real</h4>
+      <p>Bot funcional com Baileys + Vercel</p>
     </div>
 
-    <a href="https://railway.app" target="_blank" class="btn">
-      <i class="fas fa-train"></i> Deploy no Railway.app
-    </a>
+    <!-- Toggle Switch -->
+    <div class="toggle-container">
+      <div class="toggle-option active" data-mode="pair">
+        <i class="fas fa-key"></i> Código de Pareamento
+      </div>
+      <div class="toggle-option" data-mode="qr">
+        <i class="fas fa-qrcode"></i> Código QR
+      </div>
+    </div>
 
-    <a href="https://render.com" target="_blank" class="btn btn-secondary">
-      <i class="fas fa-server"></i> Deploy no Render.com
-    </a>
+    <div class="input-group" id="inputGroup">
+      <label class="input-label">Digite seu número do WhatsApp com código do país</label>
+      <input type="text" id="mobileNumber" class="input-field" placeholder="+5565984660212" pattern="[+][0-9]{10,}" title="Por favor digite o código do país começando com + seguido do número">
+    </div>
 
-    <button class="btn" onclick="testPairAPI()">
-      <i class="fas fa-key"></i> Testar API de Pairing (Demo)
+    <button class="btn" id="submitBtn" onclick="generatePairingCode()">
+      <i class="fas fa-key"></i> Gerar Código de Pareamento
+    </button>
+
+    <button class="btn btn-secondary" onclick="generateQRCode()" style="display:none;" id="qrBtn">
+      <i class="fas fa-qrcode"></i> Gerar QR Code
+    </button>
+
+    <button class="btn" onclick="checkStatus()">
+      <i class="fas fa-info-circle"></i> Status do Bot
     </button>
 
     <div id="result" style="margin-top: 20px; padding: 15px; border-radius: 8px; display: none;"></div>
@@ -193,38 +198,165 @@
   </div>
 
   <script>
-    async function testPairAPI() {
+    let currentMode = 'pair';
+
+    // Toggle functionality
+    document.querySelectorAll('.toggle-option').forEach(option => {
+      option.addEventListener('click', function() {
+        const mode = this.dataset.mode;
+        if (mode === currentMode) return;
+
+        // Update active state
+        document.querySelectorAll('.toggle-option').forEach(opt => opt.classList.remove('active'));
+        this.classList.add('active');
+
+        // Update mode
+        currentMode = mode;
+
+        // Update button visibility
+        const submitBtn = document.getElementById('submitBtn');
+        const qrBtn = document.getElementById('qrBtn');
+        const inputGroup = document.getElementById('inputGroup');
+
+        if (mode === 'pair') {
+          submitBtn.style.display = 'block';
+          qrBtn.style.display = 'none';
+          inputGroup.style.display = 'block';
+        } else {
+          submitBtn.style.display = 'none';
+          qrBtn.style.display = 'block';
+          inputGroup.style.display = 'none';
+        }
+      });
+    });
+
+    async function generatePairingCode() {
+      const mobileNumber = document.getElementById('mobileNumber').value.trim();
       const resultDiv = document.getElementById('result');
+
+      if (!mobileNumber) {
+        showResult('Por favor digite seu número do WhatsApp', 'error');
+        return;
+      }
+
       resultDiv.style.display = 'block';
-      resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testando API...';
+      resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando código de pareamento...';
       resultDiv.style.background = '#f8f9fa';
       resultDiv.style.border = '1px solid #dee2e6';
 
       try {
-        const response = await fetch('/pair?number=5511999999999');
+        const response = await fetch(`/pair?number=${mobileNumber.replace(/[^0-9]/g, "")}`);
         const data = await response.json();
 
-        if (response.ok) {
+        if (response.ok && data.success) {
           resultDiv.innerHTML = `
             <div style="color: #28a745;">
-              <i class="fas fa-check-circle"></i> API Funcionando<br>
-              <strong>Código Demo:</strong> ${data.code}<br>
-              <small>${data.note || 'Código de demonstração apenas'}</small>
+              <i class="fas fa-check-circle"></i> <strong>Código Gerado!</strong><br>
+              <h2 style="font-size: 24px; margin: 10px 0;">${data.code}</h2>
+              <div style="font-size: 12px; margin-top: 10px;">
+                ${data.instructions.map(inst => `<div>• ${inst}</div>`).join('')}
+              </div>
             </div>
           `;
           resultDiv.style.background = '#d4edda';
           resultDiv.style.border = '1px solid #c3e6cb';
         } else {
-          throw new Error(data.error || 'Erro na API');
+          throw new Error(data.error || 'Erro ao gerar código');
         }
       } catch (error) {
+        showResult(`Erro: ${error.message}`, 'error');
+      }
+    }
+
+    async function generateQRCode() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando QR Code...';
+      resultDiv.style.background = '#f8f9fa';
+      resultDiv.style.border = '1px solid #dee2e6';
+
+      try {
+        const response = await fetch('/qr');
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          resultDiv.innerHTML = `
+            <div style="color: #28a745; text-align: center;">
+              <i class="fas fa-check-circle"></i> <strong>QR Code Gerado!</strong><br>
+              <img src="${data.qr}" style="max-width: 280px; margin: 15px 0; border-radius: 8px;">
+              <div style="font-size: 12px;">
+                ${data.instructions.map(inst => `<div>• ${inst}</div>`).join('')}
+              </div>
+            </div>
+          `;
+          resultDiv.style.background = '#d4edda';
+          resultDiv.style.border = '1px solid #c3e6cb';
+        } else {
+          throw new Error(data.error || 'QR Code não disponível');
+        }
+      } catch (error) {
+        showResult(`Erro: ${error.message}`, 'error');
+      }
+    }
+
+    async function checkStatus() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando status...';
+      resultDiv.style.background = '#f8f9fa';
+      resultDiv.style.border = '1px solid #dee2e6';
+
+      try {
+        const response = await fetch('/status');
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          const statusIcon = data.connected ? '🟢' : '🔴';
+          const statusText = data.connected ? 'Conectado' : 'Desconectado';
+
+          resultDiv.innerHTML = `
+            <div style="color: ${data.connected ? '#28a745' : '#dc3545'};">
+              <i class="fas fa-info-circle"></i> <strong>Status do Bot</strong><br>
+              <div style="margin: 10px 0;">
+                <div>${statusIcon} <strong>${statusText}</strong></div>
+                <div>🤖 Bot Inicializado: ${data.botInitialized ? 'Sim' : 'Não'}</div>
+                <div>📱 QR Disponível: ${data.hasQR ? 'Sim' : 'Não'}</div>
+                <div style="font-size: 11px; margin-top: 8px;">
+                  Última verificação: ${new Date(data.timestamp).toLocaleString()}
+                </div>
+              </div>
+            </div>
+          `;
+          resultDiv.style.background = data.connected ? '#d4edda' : '#f8d7da';
+          resultDiv.style.border = data.connected ? '1px solid #c3e6cb' : '1px solid #f5c6cb';
+        } else {
+          throw new Error(data.error || 'Erro ao verificar status');
+        }
+      } catch (error) {
+        showResult(`Erro: ${error.message}`, 'error');
+      }
+    }
+
+    function showResult(message, type) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.style.display = 'block';
+
+      if (type === 'error') {
         resultDiv.innerHTML = `
           <div style="color: #dc3545;">
-            <i class="fas fa-exclamation-circle"></i> Erro: ${error.message}
+            <i class="fas fa-exclamation-circle"></i> ${message}
           </div>
         `;
         resultDiv.style.background = '#f8d7da';
         resultDiv.style.border = '1px solid #f5c6cb';
+      } else {
+        resultDiv.innerHTML = `
+          <div style="color: #28a745;">
+            <i class="fas fa-check-circle"></i> ${message}
+          </div>
+        `;
+        resultDiv.style.background = '#d4edda';
+        resultDiv.style.border = '1px solid #c3e6cb';
       }
     }
   </script>
