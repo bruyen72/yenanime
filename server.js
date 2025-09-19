@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const QRCode = require('qrcode');
 const app = express();
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
@@ -18,16 +18,16 @@ function setBotInstance(bot) {
 }
 
 // Route for pairing code
-app.get('/pair', async (req, res) => {
+app.get('/api/pair', async (req, res) => {
     try {
         const { number } = req.query;
 
         if (!number) {
-            return res.json({ error: 'Número de telefone obrigatório' });
+            return res.json({ success: false, error: 'Número de telefone obrigatório' });
         }
 
         if (!botInstance) {
-            return res.json({ code: 'Bot não conectado. Aguarde...' });
+            return res.json({ success: false, error: 'Bot não conectado. Aguarde...' });
         }
 
         // Clean the phone number
@@ -38,6 +38,7 @@ app.get('/pair', async (req, res) => {
             const formattedCode = code?.match(/.{1,4}/g)?.join("-") || code;
 
             res.json({
+                success: true,
                 code: formattedCode,
                 message: 'Código gerado com sucesso!',
                 instructions: [
@@ -49,19 +50,20 @@ app.get('/pair', async (req, res) => {
             });
         } catch (error) {
             console.error('Erro ao gerar pairing code:', error);
-            res.json({ code: 'Erro ao gerar código. Tente novamente.' });
+            res.json({ success: false, error: 'Erro ao gerar código. Tente novamente.' });
         }
     } catch (error) {
-        console.error('Erro na rota /pair:', error);
-        res.json({ code: 'Serviço indisponível' });
+        console.error('Erro na rota /api/pair:', error);
+        res.json({ success: false, error: 'Serviço indisponível' });
     }
 });
 
 // Route for QR code
-app.get('/qr', async (req, res) => {
+app.get('/api/qr', async (req, res) => {
     try {
         if (!currentQR) {
             return res.json({
+                success: false,
                 error: 'QR code não disponível',
                 message: 'Aguarde o bot gerar um novo QR code...'
             });
@@ -71,6 +73,7 @@ app.get('/qr', async (req, res) => {
         const qrImage = await QRCode.toDataURL(currentQR);
 
         res.json({
+            success: true,
             qr: qrImage,
             instructions: [
                 'Escaneie este QR code com seu WhatsApp',
@@ -81,8 +84,8 @@ app.get('/qr', async (req, res) => {
             ]
         });
     } catch (error) {
-        console.error('Erro na rota /qr:', error);
-        res.json({ error: 'Erro ao gerar QR code' });
+        console.error('Erro na rota /api/qr:', error);
+        res.json({ success: false, error: 'Erro ao gerar QR code' });
     }
 });
 
@@ -93,11 +96,87 @@ function updateQR(qr) {
 }
 
 // Route for bot status
-app.get('/status', (req, res) => {
+app.get('/api/status', (req, res) => {
+    const memUsage = process.memoryUsage();
+    const isConnected = botInstance ? true : false;
+    
     res.json({
-        bot: botInstance ? 'connected' : 'disconnected',
-        qr: currentQR ? 'available' : 'unavailable',
+        success: true,
+        status: isConnected ? 'operational' : 'disconnected',
+        version: '2.1.8',
+        stats: {
+            active_pairing_sessions: isConnected ? 1 : 0,
+            active_qr_codes: currentQR ? 1 : 0,
+            memory_usage: {
+                rss: `${Math.round(memUsage.rss / 1024 / 1024)}MB`
+            }
+        },
+        features: {
+            real_qr_generation: true,
+            real_pairing_codes: true
+        },
+        environment_check: {
+            node_version: process.version
+        },
         timestamp: new Date().toISOString()
+    });
+});
+
+// Route for mobile diagnostics
+app.get('/api/diagnostics', (req, res) => {
+    const userAgent = req.headers['user-agent'] || '';
+    const isIos = /iPad|iPhone|iPod/.test(userAgent);
+    const isAndroid = /Android/.test(userAgent);
+    const isChrome = /Chrome/.test(userAgent);
+    const isSafari = /Safari/.test(userAgent) && !isChrome;
+    const isFirefox = /Firefox/.test(userAgent);
+    const isWhatsApp = /WhatsApp/.test(userAgent);
+
+    const platform = isIos ? 'iOS' : isAndroid ? 'Android' : 'Desktop';
+    const compatibilityScore = isIos || isAndroid ? 85 : 75;
+    const recommendedMethod = isIos || isAndroid ? 'qr' : 'pair';
+
+    res.json({
+        success: true,
+        diagnostic_report: {
+            device_detection: {
+                device: {
+                    is_ios: isIos,
+                    is_android: isAndroid
+                },
+                browser: {
+                    is_chrome: isChrome,
+                    is_safari: isSafari,
+                    is_firefox: isFirefox,
+                    is_whatsapp: isWhatsApp
+                }
+            },
+            validation: {
+                requirements: [
+                    'WhatsApp instalado no dispositivo',
+                    'Conexão com internet estável',
+                    'Número de telefone válido'
+                ],
+                warnings: []
+            },
+            diagnosis: {
+                common_issues: [
+                    'QR Code "inválido" - possível conexão Meta Business API',
+                    'Pareamento falhando - verificar formato do número',
+                    'Limitações de plataforma serverless'
+                ],
+                specific_solutions: [
+                    'Use formato E.164 sem + (ex: 5511999999999)',
+                    'Desconecte de outras APIs do WhatsApp',
+                    'Tente método alternativo se um falhar'
+                ]
+            },
+            summary: {
+                platform: platform,
+                compatibility_score: compatibilityScore,
+                recommended_method: recommendedMethod
+            }
+        }
     });
 });
 
@@ -107,9 +186,9 @@ app.get('/', (req, res) => {
 });
 
 // Start server
-const server = app.listen(PORT, () => {
-    console.log(`🌐 Servidor web rodando em http://localhost:${PORT}`);
-    console.log(`📱 Interface de pairing disponível em: http://localhost:${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🌐 Servidor web rodando em http://0.0.0.0:${PORT}`);
+    console.log(`📱 Interface de pairing disponível em: http://0.0.0.0:${PORT}`);
 });
 
 module.exports = { setBotInstance, updateQR, server };

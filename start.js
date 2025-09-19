@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 5000;
 
 // Startup script for Knight Bot with Web Interface
 console.log('🚀 Iniciando Knight Bot com Interface Web...\n');
