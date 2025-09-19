@@ -17,7 +17,6 @@ const FileType = require('file-type')
 const path = require('path')
 const axios = require('axios')
 const { handleMessages, handleGroupParticipantUpdate, handleStatus } = require('./main');
-const { setBotInstance, updateQR } = require('./server');
 const PhoneNumber = require('awesome-phonenumber')
 const { imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('./lib/exif')
 const { smsg, isUrl, generateMessageTag, getBuffer, getSizeMedia, fetch, await, sleep, reSize } = require('./lib/myfunc')
@@ -138,8 +137,7 @@ async function startXeonBotInc() {
 
     store.bind(XeonBotInc.ev)
 
-    // Set bot instance for web server
-    setBotInstance(XeonBotInc);
+    // Bot iniciado em modo terminal
 
     // Message handling
     XeonBotInc.ev.on('messages.upsert', async chatUpdate => {
@@ -247,21 +245,11 @@ async function startXeonBotInc() {
 
     XeonBotInc.serializeM = (m) => smsg(XeonBotInc, m, store)
 
-    // Handle pairing code - Replit Web Interface Mode
+    // Handle pairing code
     if (pairingCode && !XeonBotInc.authState.creds.registered) {
         if (useMobile) throw new Error('Cannot use pairing code with mobile api')
 
         let phoneNumber
-        
-        // No ambiente Replit, aguardar pairing via web interface apenas
-        const isReplit = process.env.REPLIT_DB_URL || process.env.REPL_SLUG || process.env.REPL_OWNER || !process.stdin.isTTY;
-        if (isReplit) {
-            console.log(chalk.green('🌐 Modo Web Interface - Aguardando pairing via interface web em /api/pair'));
-            console.log(chalk.cyan('📱 Acesse a interface web para gerar códigos de pareamento'));
-            console.log(chalk.yellow('⏳ Bot pronto para receber solicitações de pairing...'));
-            return XeonBotInc; // Retornar sem pedir input interativo
-        }
-        
         if (!!global.phoneNumber) {
             phoneNumber = global.phoneNumber
         } else {
@@ -330,10 +318,9 @@ async function startXeonBotInc() {
         console.log(chalk.magenta(`[DEBUG] *** CONNECTION UPDATE EVENT *** : ${connection}`))
         console.log(chalk.magenta(`[DEBUG] Event data:`, JSON.stringify(s, null, 2)))
 
-        // Update QR code for web interface
+        // Mostrar QR code no terminal se disponível
         if (qr) {
-            updateQR(qr);
-            console.log(chalk.cyan('📱 QR Code disponível na interface web'));
+            console.log(chalk.cyan('📱 QR Code gerado (use a interface web se precisar)'));
         }
 
         // Solicitar pairing code apenas uma vez quando conectando
