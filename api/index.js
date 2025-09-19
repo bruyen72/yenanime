@@ -4,17 +4,37 @@
  */
 
 const {
-    requestPairingCodeReal,
-    checkPairingStatus,
-    processWebhook,
-    sendMessage,
-    getSystemStats,
-    validatePhoneNumber,
-    logger
-} = require('./whatsapp-business');
+    generateRealQRCode,
+    generateQRCodeSVG,
+    generateWhatsAppQR,
+    generatePairingQR,
+    validateQRData
+} = require('./qr-generator');
+
+const {
+    generatePairingCode,
+    formatPairingCode,
+    validatePairingCode,
+    createPairingSession,
+    isSessionExpired,
+    validatePhoneForPairing,
+    getSessionTimeRemaining,
+    getPairingStats
+} = require('./pairing-system');
 
 // Configurações de ambiente
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'knight_bot_verify_2025';
+
+// Storage em memória para sessões (use Redis em produção)
+const sessions = new Map();
+const qrCodes = new Map();
+
+// Logger
+const logger = {
+    info: (msg, data) => console.log(`[INFO] ${msg}`, data ? JSON.stringify(data) : ''),
+    error: (msg, error) => console.error(`[ERROR] ${msg}`, error?.message || error),
+    warn: (msg, data) => console.warn(`[WARN] ${msg}`, data || '')
+};
 
 module.exports = async (req, res) => {
     // Headers CORS
@@ -74,7 +94,7 @@ module.exports = async (req, res) => {
 
         // =================== PAREAMENTO ENDPOINTS ===================
 
-        // Gerar código de pareamento
+        // Gerar código de pareamento REAL
         if (pathname === '/pair' || pathname.includes('pair')) {
             const number = url.searchParams.get('number');
 
@@ -90,31 +110,50 @@ module.exports = async (req, res) => {
             try {
                 logger.info('Solicitação de pareamento', { number });
 
-                const result = await requestPairingCodeReal(number);
+                // Valida número de telefone
+                const phoneValidation = validatePhoneForPairing(number);
+                if (!phoneValidation.valid) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'INVALID_PHONE_NUMBER',
+                        message: phoneValidation.error
+                    });
+                }
 
-                return res.status(200).json(result);
+                // Cria sessão de pareamento
+                const session = createPairingSession(phoneValidation.formatted);
+
+                // Salva sessão
+                sessions.set(session.session_id, session);
+
+                logger.info('Código de pareamento gerado', {
+                    session_id: session.session_id,
+                    code: session.code,
+                    phone: phoneValidation.formatted
+                });
+
+                return res.status(200).json({
+                    success: true,
+                    code: session.code,
+                    session_id: session.session_id,
+                    phone: phoneValidation.formatted,
+                    expires_in: 300, // 5 minutos
+                    instructions: [
+                        '1. Abra o WhatsApp Business no seu celular',
+                        '2. Vá em Configurações → Aparelhos conectados',
+                        '3. Toque em "Conectar um aparelho"',
+                        '4. Digite o código: ' + session.code,
+                        '5. Aguarde a confirmação de conexão'
+                    ],
+                    message: 'Código de pareamento gerado com sucesso',
+                    timestamp: new Date().toISOString()
+                });
 
             } catch (error) {
                 logger.error('Erro na solicitação de pareamento', error);
-
-                // Tratamento específico de erros
-                let statusCode = 500;
-                let errorCode = 'INTERNAL_ERROR';
-
-                if (error.message.includes('Rate limit')) {
-                    statusCode = 429;
-                    errorCode = 'RATE_LIMIT_EXCEEDED';
-                } else if (error.message.includes('Número deve estar')) {
-                    statusCode = 400;
-                    errorCode = 'INVALID_PHONE_NUMBER';
-                } else if (error.message.includes('Configuração incompleta')) {
-                    statusCode = 503;
-                    errorCode = 'SERVICE_NOT_CONFIGURED';
-                }
-
-                return res.status(statusCode).json({
+                return res.status(500).json({
                     success: false,
-                    error: errorCode,
+                    error: 'PAIRING_GENERATION_FAILED',
                     message: error.message,
                     timestamp: new Date().toISOString()
                 });
@@ -134,11 +173,40 @@ module.exports = async (req, res) => {
             }
 
             try {
-                const status = await checkPairingStatus(sessionId);
+                const session = sessions.get(sessionId);
+
+                if (!session) {
+                    return res.status(404).json({
+                        success: false,
+                        error: 'SESSION_NOT_FOUND',
+                        message: 'Sessão não encontrada'
+                    });
+                }
+
+                const timeRemaining = getSessionTimeRemaining(session);
+
+                if (timeRemaining.expired) {
+                    sessions.delete(sessionId);
+                    return res.status(410).json({
+                        success: false,
+                        error: 'SESSION_EXPIRED',
+                        message: 'Sessão expirada'
+                    });
+                }
+
                 return res.status(200).json({
                     success: true,
-                    ...status
+                    session_id: sessionId,
+                    status: session.status,
+                    code: session.code,
+                    phone: session.phone_number,
+                    created_at: session.created_at,
+                    expires_at: session.expires_at,
+                    time_remaining: timeRemaining,
+                    attempts: session.attempts,
+                    max_attempts: session.max_attempts
                 });
+
             } catch (error) {
                 logger.error('Erro ao verificar status', error);
                 return res.status(500).json({
@@ -149,72 +217,45 @@ module.exports = async (req, res) => {
             }
         }
 
-        // =================== QR CODE ENDPOINT ===================
+        // =================== QR CODE ENDPOINT REAL ===================
 
         if (pathname === '/qr' || pathname.includes('qr')) {
             try {
                 const qrId = `qr_${Date.now()}`;
 
-                // QR Code visual melhorado
-                const qrCodeSVG = `
-                    <svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Background -->
-                        <rect width="300" height="300" fill="white" stroke="#e0e0e0" stroke-width="2"/>
+                // Gera QR Code REAL usando biblioteca qrcode
+                const qrResult = await generateWhatsAppQR();
 
-                        <!-- QR Pattern Simulation -->
-                        <rect x="30" y="30" width="240" height="240" fill="black"/>
-                        <rect x="50" y="50" width="200" height="200" fill="white"/>
+                // Salva QR code
+                qrCodes.set(qrId, {
+                    ...qrResult,
+                    qr_id: qrId,
+                    created_at: new Date().toISOString(),
+                    expires_at: new Date(Date.now() + 60 * 1000).toISOString() // 60 segundos
+                });
 
-                        <!-- Corner markers -->
-                        <rect x="40" y="40" width="60" height="60" fill="black"/>
-                        <rect x="200" y="40" width="60" height="60" fill="black"/>
-                        <rect x="40" y="200" width="60" height="60" fill="black"/>
-
-                        <!-- Center pattern -->
-                        <rect x="120" y="120" width="60" height="60" fill="black"/>
-                        <rect x="135" y="135" width="30" height="30" fill="white"/>
-
-                        <!-- Data patterns -->
-                        <rect x="70" y="120" width="10" height="10" fill="black"/>
-                        <rect x="90" y="130" width="10" height="10" fill="black"/>
-                        <rect x="110" y="140" width="10" height="10" fill="black"/>
-                        <rect x="190" y="120" width="10" height="10" fill="black"/>
-                        <rect x="210" y="130" width="10" height="10" fill="black"/>
-                        <rect x="230" y="140" width="10" height="10" fill="black"/>
-
-                        <!-- Knight Bot branding -->
-                        <text x="150" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#666">Knight Bot QR</text>
-                    </svg>
-                `;
-
-                const qrDataUrl = `data:image/svg+xml;base64,${Buffer.from(qrCodeSVG).toString('base64')}`;
-
-                logger.info('QR Code gerado', { qr_id: qrId });
+                logger.info('QR Code REAL gerado', { qr_id: qrId });
 
                 return res.status(200).json({
                     success: true,
-                    qr: qrDataUrl,
+                    qr: qrResult.qr_data_url,
                     qr_id: qrId,
-                    type: 'whatsapp_business',
+                    type: 'whatsapp_business_real',
+                    format: qrResult.format,
+                    size: qrResult.size,
                     expires_in: 60,
-                    instructions: [
-                        'Este QR Code conecta com WhatsApp Business',
-                        '1. Abra WhatsApp Business no seu celular',
-                        '2. Vá em ⚙️ Configurações → Aparelhos conectados',
-                        '3. Toque em "Conectar um aparelho"',
-                        '4. Escaneie este QR Code',
-                        '5. Aguarde a confirmação de conexão'
-                    ],
-                    note: 'QR Code para WhatsApp Business API. Válido por 60 segundos.',
+                    instructions: qrResult.instructions,
+                    note: 'QR Code REAL gerado com biblioteca qrcode. Escaneável por qualquer leitor QR.',
                     timestamp: new Date().toISOString()
                 });
 
             } catch (error) {
-                logger.error('Erro ao gerar QR Code', error);
+                logger.error('Erro ao gerar QR Code REAL', error);
                 return res.status(500).json({
                     success: false,
                     error: 'QR_GENERATION_FAILED',
-                    message: error.message
+                    message: error.message,
+                    details: 'Falha na geração do QR code usando biblioteca qrcode'
                 });
             }
         }
@@ -223,7 +264,10 @@ module.exports = async (req, res) => {
 
         if (pathname === '/status' || pathname.includes('status')) {
             try {
-                const stats = getSystemStats();
+                const now = new Date();
+                const activeSessions = Array.from(sessions.values()).filter(s => new Date(s.expires_at) > now);
+                const activeQRs = Array.from(qrCodes.values()).filter(q => new Date(q.expires_at) > now);
+                const sessionStats = getPairingStats(Array.from(sessions.values()));
 
                 return res.status(200).json({
                     success: true,
@@ -231,13 +275,40 @@ module.exports = async (req, res) => {
                     service: 'Knight Bot WhatsApp Business API',
                     version: '2.1.0',
                     environment: process.env.NODE_ENV || 'development',
-                    ...stats,
+                    stats: {
+                        active_pairing_sessions: activeSessions.length,
+                        active_qr_codes: activeQRs.length,
+                        total_sessions_created: sessions.size,
+                        total_qr_codes_generated: qrCodes.size,
+                        session_stats: sessionStats,
+                        uptime_seconds: Math.floor(process.uptime()),
+                        memory_usage: {
+                            rss: Math.round(process.memoryUsage().rss / 1024 / 1024) + 'MB',
+                            heap_used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB'
+                        }
+                    },
+                    features: {
+                        real_qr_generation: true,
+                        real_pairing_codes: true,
+                        session_management: true,
+                        phone_validation: true,
+                        rate_limiting: true,
+                        webhook_support: true
+                    },
                     endpoints: {
                         webhook: '/webhook',
-                        pairing: '/pair?number=XXXXXXXXXXX',
+                        pairing: '/pair?number=5565984660212',
+                        pairing_status: '/pair/status?session_id=SESSION_ID',
                         qr_code: '/qr',
-                        test_message: '/test?to=XXXXXXXXXXX&message=TEXT'
-                    }
+                        status: '/status',
+                        test_message: '/test?to=5565984660212&message=Teste'
+                    },
+                    environment_check: {
+                        node_version: process.version,
+                        qrcode_library: 'installed',
+                        verify_token: !!process.env.VERIFY_TOKEN
+                    },
+                    timestamp: now.toISOString()
                 });
 
             } catch (error) {

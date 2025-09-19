@@ -140,6 +140,63 @@
       color: rgba(0, 0, 0, 0.5);
     }
 
+    .toggle-container {
+      display: flex;
+      background: var(--accent-color);
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+
+    .toggle-option {
+      flex: 1;
+      padding: 12px 16px;
+      text-align: center;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .toggle-option.active {
+      background: var(--primary-color);
+      color: var(--secondary-color);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .toggle-option:not(.active):hover {
+      background: var(--hover-color);
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text-color);
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+    }
+
     @media (max-width: 480px) {
       .container {
         padding: 20px;
@@ -311,24 +368,28 @@
         const data = await response.json();
 
         if (response.ok && data.success) {
-          const statusIcon = data.connected ? '🟢' : '🔴';
-          const statusText = data.connected ? 'Conectado' : 'Desconectado';
+          const isOperational = data.status === 'operational';
 
           resultDiv.innerHTML = `
-            <div style="color: ${data.connected ? '#28a745' : '#dc3545'};">
-              <i class="fas fa-info-circle"></i> <strong>Status do Bot</strong><br>
+            <div style="color: ${isOperational ? '#28a745' : '#dc3545'};">
+              <i class="fas fa-info-circle"></i> <strong>Status do Sistema</strong><br>
               <div style="margin: 10px 0;">
-                <div>${statusIcon} <strong>${statusText}</strong></div>
-                <div>🤖 Bot Inicializado: ${data.botInitialized ? 'Sim' : 'Não'}</div>
-                <div>📱 QR Disponível: ${data.hasQR ? 'Sim' : 'Não'}</div>
+                <div>🟢 <strong>Status:</strong> ${data.status}</div>
+                <div>📊 <strong>Versão:</strong> ${data.version}</div>
+                <div>📱 <strong>Sessões Ativas:</strong> ${data.stats?.active_pairing_sessions || 0}</div>
+                <div>🎯 <strong>QR Codes Ativos:</strong> ${data.stats?.active_qr_codes || 0}</div>
+                <div>⚡ <strong>QR Real:</strong> ${data.features?.real_qr_generation ? 'Sim ✅' : 'Não ❌'}</div>
+                <div>🔐 <strong>Pairing Real:</strong> ${data.features?.real_pairing_codes ? 'Sim ✅' : 'Não ❌'}</div>
+                <div>💾 <strong>Memória:</strong> ${data.stats?.memory_usage?.rss || 'N/A'}</div>
+                <div>🔧 <strong>Node:</strong> ${data.environment_check?.node_version || 'N/A'}</div>
                 <div style="font-size: 11px; margin-top: 8px;">
                   Última verificação: ${new Date(data.timestamp).toLocaleString()}
                 </div>
               </div>
             </div>
           `;
-          resultDiv.style.background = data.connected ? '#d4edda' : '#f8d7da';
-          resultDiv.style.border = data.connected ? '1px solid #c3e6cb' : '1px solid #f5c6cb';
+          resultDiv.style.background = isOperational ? '#d4edda' : '#f8d7da';
+          resultDiv.style.border = isOperational ? '1px solid #c3e6cb' : '1px solid #f5c6cb';
         } else {
           throw new Error(data.error || 'Erro ao verificar status');
         }
