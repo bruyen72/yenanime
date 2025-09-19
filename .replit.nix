@@ -2,6 +2,7 @@
   deps = [
     # Node.js e runtime
     pkgs.nodejs_20
+    pkgs.ffmpeg
 
     # Browser dependencies para Playwright
     pkgs.chromium
