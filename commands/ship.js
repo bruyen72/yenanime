@@ -1,12 +1,17 @@
-const { chromium } = require('playwright');
 // Configuração para Vercel
 let chromiumPackage;
 let playwrightCore;
+let chromium;
 try {
     chromiumPackage = require('@sparticuz/chromium');
     playwrightCore = require('playwright-core');
 } catch (error) {
-    console.log('Usando Playwright padrão (desenvolvimento)');
+    try {
+        chromium = require('playwright').chromium;
+        console.log('Usando Playwright padrão (desenvolvimento)');
+    } catch (playwrightError) {
+        console.log('Playwright não disponível, usando imagens de fallback');
+    }
 }
 const axios = require('axios');
 const https = require('https');
@@ -17,8 +22,8 @@ let lastFetch = 0;
 const CACHE_DURATION = 1800000; // 30 minutos em milissegundos (reduzido para economizar memória)
 
 // Credenciais do Pinterest (Use variáveis de ambiente!)
-const PINTEREST_EMAIL = process.env.PINTEREST_EMAIL || 'brunoruthes92@gmail.com';
-const PINTEREST_PASSWORD = process.env.PINTEREST_PASSWORD || 'BRPO@hulk1';
+const PINTEREST_EMAIL = process.env.PINTEREST_EMAIL || '';
+const PINTEREST_PASSWORD = process.env.PINTEREST_PASSWORD || '';
 
 // Imagens de fallback mais confiáveis
 const FALLBACK_IMAGES = [
@@ -60,9 +65,12 @@ async function fetchAnimeShipImages() {
             return FALLBACK_IMAGES;
         } else {
             console.log('💻 Ambiente de desenvolvimento, usando Chromium local...');
+            if (!chromium) {
+                console.log('⚠️ Chromium não disponível, usando imagens de fallback');
+                return FALLBACK_IMAGES;
+            }
             browser = await chromium.launch({
                 headless: true,
-                executablePath: '/usr/bin/chromium',
                 args: [
                     '--no-sandbox',
                     '--disable-setuid-sandbox',

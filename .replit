@@ -2,6 +2,7 @@ modules = ["web", "nix", "nodejs-20"]
 
 [nix]
 channel = "stable-25_05"
+packages = ["ffmpeg", "imagemagick"]
 
 [agent]
 expertMode = true
@@ -33,10 +34,6 @@ outputType = "webview"
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 43619
-externalPort = 3000
 
 [deployment]
 deploymentTarget = "vm"
