@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: knight-bot-web
+    env: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm run start:render
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: RENDER
+        value: "true"
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: "/opt/render/.cache"
