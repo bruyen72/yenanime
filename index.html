@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Knight Bot - Conectar WhatsApp</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <style>
+    :root {
+      --primary-color: #000000;
+      --secondary-color: #ffffff;
+      --accent-color: #f0f0f0;
+      --text-color: #000000;
+      --background-color: #ffffff;
+      --hover-color: #f5f5f5;
+      --border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--background-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 450px;
+      background: var(--background-color);
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border-color);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .logo {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 16px;
+      background: var(--primary-color);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: white;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--primary-color);
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.7);
+      margin-bottom: 20px;
+    }
+
+    .warning {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      color: #856404;
+    }
+
+    .warning h3 {
+      margin-bottom: 8px;
+      color: #d63031;
+    }
+
+    .warning ul {
+      margin-left: 20px;
+    }
+
+    .warning li {
+      margin-bottom: 5px;
+    }
+
+    .demo-notice {
+      background: #e3f2fd;
+      border: 1px solid #2196f3;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      color: #1565c0;
+      text-align: center;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary-color);
+      border: none;
+      border-radius: 12px;
+      color: var(--secondary-color);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 16px;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px;
+        border-radius: 12px;
+        max-width: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo"><i class="fas fa-robot"></i></div>
+      <h1 class="title">Knight Bot</h1>
+      <p class="subtitle">Interface de Demonstração</p>
+    </div>
+
+    <div class="warning">
+      <h3><i class="fas fa-exclamation-triangle"></i> Aviso Importante</h3>
+      <p>Esta é apenas uma <strong>demonstração</strong> no Vercel. O bot completo não funciona em Serverless Functions devido a:</p>
+      <ul>
+        <li>Conexões WebSocket persistentes necessárias</li>
+        <li>Estado de sessão do WhatsApp</li>
+        <li>Limitações de timeout (10s-300s)</li>
+      </ul>
+    </div>
+
+    <div class="demo-notice">
+      <h4><i class="fas fa-info-circle"></i> Para Usar o Bot Completo</h4>
+      <p>Implemente em um serviço persistente:</p>
+    </div>
+
+    <a href="https://railway.app" target="_blank" class="btn">
+      <i class="fas fa-train"></i> Deploy no Railway.app
+    </a>
+
+    <a href="https://render.com" target="_blank" class="btn btn-secondary">
+      <i class="fas fa-server"></i> Deploy no Render.com
+    </a>
+
+    <button class="btn" onclick="testPairAPI()">
+      <i class="fas fa-key"></i> Testar API de Pairing (Demo)
+    </button>
+
+    <div id="result" style="margin-top: 20px; padding: 15px; border-radius: 8px; display: none;"></div>
+
+    <div class="footer">
+      <p>© 2025 Knight Bot | Apenas Demonstração Vercel</p>
+      <p><small>Para funcionalidade completa, use Railway ou Render</small></p>
+    </div>
+  </div>
+
+  <script>
+    async function testPairAPI() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testando API...';
+      resultDiv.style.background = '#f8f9fa';
+      resultDiv.style.border = '1px solid #dee2e6';
+
+      try {
+        const response = await fetch('/pair?number=5511999999999');
+        const data = await response.json();
+
+        if (response.ok) {
+          resultDiv.innerHTML = `
+            <div style="color: #28a745;">
+              <i class="fas fa-check-circle"></i> API Funcionando<br>
+              <strong>Código Demo:</strong> ${data.code}<br>
+              <small>${data.note || 'Código de demonstração apenas'}</small>
+            </div>
+          `;
+          resultDiv.style.background = '#d4edda';
+          resultDiv.style.border = '1px solid #c3e6cb';
+        } else {
+          throw new Error(data.error || 'Erro na API');
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div style="color: #dc3545;">
+            <i class="fas fa-exclamation-circle"></i> Erro: ${error.message}
+          </div>
+        `;
+        resultDiv.style.background = '#f8d7da';
+        resultDiv.style.border = '1px solid #f5c6cb';
+      }
+    }
+  </script>
+</body>
+</html>

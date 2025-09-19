@@ -24,17 +24,8 @@
   ],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "axios": "^1.12.2",
-    "qrcode": "^1.5.4"
-  },
-  "overrides": {
-    "jimp": "^1.6.0"
-  },
+  "dependencies": {},
   "engines": {
     "node": "22.x"
-  },
-  "resolutions": {
-    "undici": "^5.28.4"
   }
 }
