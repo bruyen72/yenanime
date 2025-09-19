@@ -2,7 +2,7 @@ modules = ["nodejs-18", "web", "nix"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["ffmpeg", "imagemagick", "glib", "nss", "dbus", "atk", "cups", "libxkbcommon", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXrandr", "mesa", "cairo", "pango", "alsa-lib"]
+packages = ["ffmpeg", "imagemagick", "glib", "nss", "dbus", "atk", "cups", "libxkbcommon", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXrandr", "mesa", "cairo", "pango", "alsa-lib", "chromium", "nspr", "libdrm", "gtk3", "expat"]
 
 [agent]
 expertMode = true
