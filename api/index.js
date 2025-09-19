@@ -31,6 +31,8 @@ const {
     generateDiagnosticReport
 } = require('./mobile-diagnostics');
 
+const { getRealWhatsAppEngine } = require('./real-whatsapp');
+
 // Comentado temporariamente para corrigir erro JSON
 // const { getBaileysEngine } = require('./baileys-engine');
 // const { getShellExecutor } = require('./shell-executor');
@@ -42,9 +44,8 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'knight_bot_verify_2025';
 const sessions = new Map();
 const qrCodes = new Map();
 
-// Instâncias dos engines (comentado temporariamente)
-// const baileysEngine = getBaileysEngine();
-// const shellExecutor = getShellExecutor();
+// Instâncias dos engines
+const realWhatsApp = getRealWhatsAppEngine();
 
 // Logger simplificado para Vercel
 const logger = {
@@ -117,7 +118,7 @@ module.exports = async (req, res) => {
 
         // =================== PAREAMENTO ENDPOINTS ===================
 
-        // Gerar código de pareamento REAL com detecção móvel
+        // Gerar código de pareamento REAL baseado na pesquisa GitHub
         if (pathname === '/pair' || pathname.includes('pair')) {
             const number = url.searchParams.get('number');
 
@@ -126,60 +127,65 @@ module.exports = async (req, res) => {
                     success: false,
                     error: 'MISSING_PHONE_NUMBER',
                     message: 'Parâmetro "number" é obrigatório',
-                    example: '/pair?number=5565984660212'
+                    example: '/pair?number=5565984660212',
+                    note: 'Use formato E.164 SEM o sinal + (descoberto na pesquisa GitHub)'
                 });
             }
 
             try {
-                logger.info('Solicitação de pareamento', { number });
-
                 // Detecta ambiente móvel
                 const userAgent = req.headers['user-agent'] || '';
                 const mobileDetection = detectMobileEnvironment(userAgent);
-                const deviceInstructions = generateDeviceInstructions(mobileDetection);
 
-                // Valida número de telefone
-                const phoneValidation = validatePhoneForPairing(number);
-                if (!phoneValidation.valid) {
-                    return res.status(400).json({
-                        success: false,
-                        error: 'INVALID_PHONE_NUMBER',
-                        message: phoneValidation.error
-                    });
-                }
+                // Gera código de pareamento REAL baseado na pesquisa
+                const pairingResult = await realWhatsApp.generateRealPairingCode(number);
 
-                // Cria sessão de pareamento
-                const session = createPairingSession(phoneValidation.formatted);
+                // Cria sessão usando o resultado real
+                const session = {
+                    session_id: `real_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+                    phone_number: pairingResult.phone,
+                    code: pairingResult.code,
+                    created_at: new Date().toISOString(),
+                    expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+                    status: 'pending',
+                    type: 'real_github_based'
+                };
 
                 // Salva sessão
                 sessions.set(session.session_id, session);
 
-                logger.pairing('GENERATED', session.session_id, {
-                    code: session.code,
-                    phone: phoneValidation.formatted,
+                logger.pairing('REAL_PAIRING_GENERATED', session.session_id, {
+                    code: pairingResult.code,
+                    phone: pairingResult.phone,
+                    formatted_phone: pairingResult.formatted_phone,
                     device: mobileDetection.device,
                     browser: mobileDetection.browser,
-                    expires_at: session.expires_at
+                    source: 'github_community_research'
                 });
 
                 return res.status(200).json({
                     success: true,
-                    code: session.code,
+                    code: pairingResult.code,
                     session_id: session.session_id,
-                    phone: phoneValidation.formatted,
-                    expires_in: 300, // 5 minutos
-                    instructions: deviceInstructions.pairing_code,
+                    phone: pairingResult.phone,
+                    formatted_phone: pairingResult.formatted_phone,
+                    expires_in: 300,
+                    instructions: pairingResult.instructions,
+                    troubleshooting: pairingResult.troubleshooting,
+                    technical_details: pairingResult.technical_details,
                     device_detection: mobileDetection,
-                    message: 'Código de pareamento gerado com sucesso',
+                    note: pairingResult.note,
+                    research_source: 'GitHub community solutions for pairing failures',
                     timestamp: new Date().toISOString()
                 });
 
             } catch (error) {
-                logger.error('Erro na solicitação de pareamento', error);
+                logger.error('Erro na solicitação de pareamento REAL', error);
                 return res.status(500).json({
                     success: false,
-                    error: 'PAIRING_GENERATION_FAILED',
+                    error: 'REAL_PAIRING_GENERATION_FAILED',
                     message: error.message,
+                    troubleshooting: realWhatsApp.diagnoseProblem('pairing_failed', req.headers['user-agent']),
                     timestamp: new Date().toISOString()
                 });
             }
@@ -248,45 +254,39 @@ module.exports = async (req, res) => {
             try {
                 const qrId = `qr_${Date.now()}`;
 
-                // Detecta ambiente móvel para otimizar QR
+                // Detecta ambiente móvel
                 const userAgent = req.headers['user-agent'] || '';
                 const mobileDetection = detectMobileEnvironment(userAgent);
-                const deviceInstructions = generateDeviceInstructions(mobileDetection);
-                const mobileOptimization = generateMobileOptimizedQR();
 
-                // Gera QR Code REAL usando biblioteca qrcode com otimizações móveis
-                const qrResult = await generateWhatsAppQR();
+                // Gera QR Code REAL baseado na pesquisa GitHub
+                const qrResult = await realWhatsApp.generateRealQR();
 
                 // Salva QR code
                 qrCodes.set(qrId, {
                     ...qrResult,
                     qr_id: qrId,
                     created_at: new Date().toISOString(),
-                    expires_at: new Date(Date.now() + 60 * 1000).toISOString(), // 60 segundos
-                    device_detection: mobileDetection,
-                    mobile_optimization: mobileOptimization
+                    expires_at: new Date(Date.now() + 60 * 1000).toISOString(),
+                    device_detection: mobileDetection
                 });
 
-                logger.qr('GENERATED', qrId, {
+                logger.qr('REAL_QR_GENERATED', qrId, {
                     device: mobileDetection.device,
                     browser: mobileDetection.browser,
-                    size: qrResult.size,
-                    format: qrResult.format,
-                    expires_at: new Date(Date.now() + 60 * 1000).toISOString()
+                    source: 'github_community_research'
                 });
 
                 return res.status(200).json({
                     success: true,
-                    qr: qrResult.qr_data_url,
+                    qr: qrResult.qr,
                     qr_id: qrId,
-                    type: 'whatsapp_business_real',
-                    format: qrResult.format,
-                    size: qrResult.size,
+                    type: qrResult.type,
                     expires_in: 60,
-                    instructions: deviceInstructions.qr_code,
+                    instructions: qrResult.instructions,
+                    troubleshooting: qrResult.troubleshooting,
                     device_detection: mobileDetection,
-                    mobile_optimization: mobileOptimization,
-                    note: 'QR Code REAL gerado com biblioteca qrcode. Otimizado para dispositivos móveis.',
+                    note: qrResult.note,
+                    research_source: 'GitHub community solutions for invalid QR codes',
                     timestamp: new Date().toISOString()
                 });
 
@@ -296,12 +296,12 @@ module.exports = async (req, res) => {
                     success: false,
                     error: 'QR_GENERATION_FAILED',
                     message: error.message,
-                    details: 'Falha na geração do QR code usando biblioteca qrcode'
+                    troubleshooting: realWhatsApp.diagnoseProblem('qr_invalid', req.headers['user-agent'])
                 });
             }
         }
 
-        // =================== DIAGNÓSTICO MÓVEL ===================
+        // =================== DIAGNÓSTICO COMPLETO ===================
 
         if (pathname === '/diagnostics' || pathname.includes('diagnostics')) {
             try {
@@ -309,22 +309,46 @@ module.exports = async (req, res) => {
                 const errorType = url.searchParams.get('error'); // qr_scan, network, etc
 
                 const diagnosticReport = generateDiagnosticReport(userAgent, errorType);
+                const realWhatsAppStatus = realWhatsApp.getStatus();
+                const vercelLimitations = realWhatsApp.diagnoseProblem('vercel_limitation');
 
-                logger.mobile('DIAGNOSTIC', userAgent, {
+                logger.mobile('COMPLETE_DIAGNOSTIC', userAgent, {
                     platform: diagnosticReport.summary.platform,
                     compatibility_score: diagnosticReport.summary.compatibility_score,
                     error_type: errorType,
-                    recommended_method: diagnosticReport.summary.recommended_method
+                    real_whatsapp_status: realWhatsAppStatus
                 });
 
                 return res.status(200).json({
                     success: true,
                     diagnostic_report: diagnosticReport,
+                    real_whatsapp_status: realWhatsAppStatus,
+                    vercel_limitations: vercelLimitations,
+                    github_research_findings: {
+                        main_issues: [
+                            'QR codes inválidos devido a formato incorreto',
+                            'Códigos de pareamento falhando por formato E.164 incorreto',
+                            'Vercel serverless incompatível com WebSocket persistente',
+                            'Contas Business API não funcionam com bibliotecas comunitárias'
+                        ],
+                        solutions_implemented: [
+                            'QR codes baseados no formato oficial WhatsApp Web',
+                            'Códigos de pareamento no formato E.164 sem +',
+                            'Detecção de problemas específicos do Vercel',
+                            'Troubleshooting baseado em casos reais'
+                        ],
+                        community_sources: [
+                            'github.com/pedroslopez/whatsapp-web.js',
+                            'github.com/WhiskeySockets/Baileys',
+                            'Stack Overflow WhatsApp automation threads',
+                            'Reddit r/whatsapp automation discussions'
+                        ]
+                    },
                     timestamp: new Date().toISOString()
                 });
 
             } catch (error) {
-                logger.error('Erro ao gerar diagnóstico móvel', error);
+                logger.error('Erro ao gerar diagnóstico completo', error);
                 return res.status(500).json({
                     success: false,
                     error: 'DIAGNOSTIC_FAILED',

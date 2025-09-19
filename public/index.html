@@ -215,8 +215,18 @@
     </div>
 
     <div class="demo-notice">
-      <h4><i class="fas fa-info-circle"></i> WhatsApp Business API</h4>
-      <p>Bot funcional usando oficial WhatsApp Business Cloud API</p>
+      <h4><i class="fas fa-info-circle"></i> Sistema Atualizado - Pesquisa GitHub</h4>
+      <p>🔥 Códigos REAIS baseados em soluções da comunidade GitHub</p>
+      <p><small>Corrigidos: QR inválido, pareamento E.164, limitações Vercel</small></p>
+    </div>
+
+    <div class="warning">
+      <h3><i class="fas fa-exclamation-triangle"></i> Problemas Conhecidos</h3>
+      <ul>
+        <li><strong>QR "Inválido":</strong> Sua conta pode estar conectada à Meta Business API</li>
+        <li><strong>Pareamento falhando:</strong> Use formato sem + (ex: 5511999999999)</li>
+        <li><strong>Vercel limitado:</strong> Serverless não suporta conexões WhatsApp persistentes</li>
+      </ul>
     </div>
 
     <!-- Toggle Switch -->
@@ -230,8 +240,9 @@
     </div>
 
     <div class="input-group" id="inputGroup">
-      <label class="input-label">Digite seu número do WhatsApp com código do país</label>
-      <input type="text" id="mobileNumber" class="input-field" placeholder="+5565984660212" pattern="[+][0-9]{10,}" title="Por favor digite o código do país começando com + seguido do número">
+      <label class="input-label">Número WhatsApp (formato E.164 SEM +)</label>
+      <input type="text" id="mobileNumber" class="input-field" placeholder="5565984660212" pattern="[0-9]{10,}" title="Digite apenas números - SEM o sinal + (descoberto na pesquisa GitHub)">
+      <small style="color: #666; font-size: 12px;">📝 Formato correto: 5511999999999 (sem símbolos)</small>
     </div>
 
     <button class="btn" id="submitBtn" onclick="generatePairingCode()">
