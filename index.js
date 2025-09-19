@@ -314,14 +314,14 @@ async function startXeonBotInc() {
 
     // Connection handling
     XeonBotInc.ev.on('connection.update', async (s) => {
-        const { connection, lastDisconnect, qr } = s
+        const { connection, lastDisconnect } = s
         console.log(chalk.magenta(`[DEBUG] *** CONNECTION UPDATE EVENT *** : ${connection}`))
-        console.log(chalk.magenta(`[DEBUG] Event data:`, JSON.stringify(s, null, 2)))
+        
+        // Only log connection and lastDisconnect, ignore QR
+        const logData = { connection, lastDisconnect: lastDisconnect ? 'present' : 'none' }
+        console.log(chalk.magenta(`[DEBUG] Event data:`, JSON.stringify(logData, null, 2)))
 
-        // Mostrar QR code no terminal se disponível
-        if (qr) {
-            console.log(chalk.cyan('📱 QR Code gerado (use a interface web se precisar)'));
-        }
+        // QR code functionality completely disabled - only pairing codes allowed
 
         // Solicitar pairing code apenas uma vez quando conectando
         if (connection === 'connecting' && pairingCode && global.pairingPhoneNumber && !XeonBotInc.authState.creds.registered) {
