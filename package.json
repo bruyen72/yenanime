@@ -32,7 +32,7 @@
     "jimp": "^1.6.0"
   },
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   },
   "resolutions": {
     "undici": "^5.28.4"
