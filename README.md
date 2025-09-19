@@ -1,4 +1,40 @@
-# 🤖 Knight Bot
+# 🤖 Knight Bot - WhatsApp Bot
+
+## ⚠️ Importante: Limitações do Vercel
+
+Este bot está configurado para **demonstração no Vercel**, mas tem limitações importantes:
+
+### 🚫 **Por que o Bot não funciona completamente no Vercel:**
+
+1. **Conexões WebSocket persistentes** - Vercel Serverless não suporta
+2. **Estado de sessão** - Functions são stateless
+3. **Conexão contínua com WhatsApp** - Requer processo persistente
+4. **Timeout de 300 segundos** - Insuficiente para operação contínua
+
+### ✅ **O que funciona no Vercel:**
+- Interface web para QR/Pairing codes (modo demo)
+- API endpoints básicos
+- Arquivos estáticos
+
+### 🚀 **Para usar o bot completo, implemente em:**
+
+#### **Opção 1: Railway.app (Recomendado)**
+- Conecte seu GitHub ao Railway
+- Implemente diretamente do repositório
+- Configure variáveis de ambiente
+
+#### **Opção 2: Render.com**
+- Conecte GitHub ao Render
+- Use "Web Service"
+- Configure build e start commands
+
+#### **Opção 3: VPS Próprio**
+```bash
+git clone <seu-repo>
+cd yenanime-main
+npm install
+node index.js
+```
 
 This is a WhatsApp bot built using the Baileys library for group management, including features like tagging all members, muting/unmuting, and many more. It's designed to help admins efficiently manage WhatsApp groups.
 

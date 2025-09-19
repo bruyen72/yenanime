@@ -462,10 +462,19 @@
 
       try {
         const response = await axios(`/pair?number=${mobileNumber.replace(/[^0-9]/g, "")}`);
-        
+
         const code = response.data.code || "Serviço Indisponível";
+        const isDemo = response.data.note && response.data.note.includes('demo');
+
         if (code === "Serviço Indisponível" || code === "Service Unavailable") {
           codeDisplay.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle"></i> Serviço Indisponível</div>';
+        } else if (isDemo) {
+          codeDisplay.innerHTML = `
+            <div class="error-message">
+              <i class="fas fa-info-circle"></i>
+              DEMO: ${code}
+              <br><small>⚠️ Código não funcional - apenas demonstração</small>
+            </div>`;
         } else {
           codeDisplay.innerHTML = `<div class="success-message"><i class="fas fa-check-circle"></i> CÓDIGO: ${code}</div>`;
         }
