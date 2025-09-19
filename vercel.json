@@ -2,11 +2,15 @@
   "version": 2,
   "functions": {
     "api/**/*.js": {
-      "maxDuration": 300,
-      "memory": 1024
+      "maxDuration": 60,
+      "memory": 512
     }
   },
   "rewrites": [
+    {
+      "source": "/webhook",
+      "destination": "/api/index"
+    },
     {
       "source": "/pair",
       "destination": "/api/index"
@@ -20,11 +24,16 @@
       "destination": "/api/index"
     },
     {
+      "source": "/test",
+      "destination": "/api/index"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index"
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "VERIFY_TOKEN": "knight_bot_verify_token_2025"
   }
 }
