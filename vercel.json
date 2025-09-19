@@ -1,15 +1,29 @@
 {
   "version": 2,
-  "functions": {
-    "api/**/*.js": {
-      "maxDuration": 300,
-      "memory": 3008
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@vercel/node",
+      "config": {
+        "maxLambdaSize": "50mb",
+        "maxDuration": 300,
+        "memory": 3008
+      }
     },
-    "*.js": {
-      "maxDuration": 300,
-      "memory": 3008
+    {
+      "src": "server.js",
+      "use": "@vercel/node",
+      "config": {
+        "maxLambdaSize": "50mb",
+        "maxDuration": 300,
+        "memory": 3008
+      }
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
     }
-  },
+  ],
   "rewrites": [
     {
       "source": "/pair",
@@ -34,26 +48,6 @@
     "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "1",
     "VERCEL": "1"
   },
-  "builds": [
-    {
-      "src": "index.js",
-      "use": "@vercel/node",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
-    },
-    {
-      "src": "server.js",
-      "use": "@vercel/node",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
   "installCommand": "npm install",
   "regions": ["iad1"]
 }
