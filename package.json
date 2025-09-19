@@ -25,7 +25,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "@whiskeysockets/baileys": "^6.7.8",
+    "axios": "^1.7.7",
+    "node-cmd": "^5.0.0"
   },
   "engines": {
     "node": "22.x"

@@ -246,6 +246,10 @@
       <i class="fas fa-info-circle"></i> Status do Bot
     </button>
 
+    <button class="btn btn-secondary" onclick="runDiagnostics()" style="background: #17a2b8;">
+      <i class="fas fa-stethoscope"></i> Diagnóstico Móvel
+    </button>
+
     <div id="result" style="margin-top: 20px; padding: 15px; border-radius: 8px; display: none;"></div>
 
     <div class="footer">
@@ -306,10 +310,17 @@
         const data = await response.json();
 
         if (response.ok && data.success) {
+          const deviceInfo = data.device_detection ?
+            `<div style="font-size: 11px; color: #666; margin: 8px 0;">
+              📱 Dispositivo: ${data.device_detection.device.is_ios ? 'iOS' : data.device_detection.device.is_android ? 'Android' : 'Desktop'}
+              ${data.device_detection.browser.is_whatsapp ? ' (WhatsApp)' : ''}
+            </div>` : '';
+
           resultDiv.innerHTML = `
             <div style="color: #28a745;">
               <i class="fas fa-check-circle"></i> <strong>Código Gerado!</strong><br>
               <h2 style="font-size: 24px; margin: 10px 0;">${data.code}</h2>
+              ${deviceInfo}
               <div style="font-size: 12px; margin-top: 10px;">
                 ${data.instructions.map(inst => `<div>• ${inst}</div>`).join('')}
               </div>
@@ -337,10 +348,23 @@
         const data = await response.json();
 
         if (response.ok && data.success) {
+          const deviceInfo = data.device_detection ?
+            `<div style="font-size: 11px; color: #666; margin: 8px 0;">
+              📱 Dispositivo: ${data.device_detection.device.is_ios ? 'iOS' : data.device_detection.device.is_android ? 'Android' : 'Desktop'}
+              ${data.device_detection.browser.is_whatsapp ? ' (WhatsApp)' : ''}
+            </div>` : '';
+
+          const optimizationInfo = data.mobile_optimization ?
+            `<div style="font-size: 10px; color: #888; margin: 5px 0;">
+              ${data.mobile_optimization.mobile_tips.join(' • ')}
+            </div>` : '';
+
           resultDiv.innerHTML = `
             <div style="color: #28a745; text-align: center;">
               <i class="fas fa-check-circle"></i> <strong>QR Code Gerado!</strong><br>
+              ${deviceInfo}
               <img src="${data.qr}" style="max-width: 280px; margin: 15px 0; border-radius: 8px;">
+              ${optimizationInfo}
               <div style="font-size: 12px;">
                 ${data.instructions.map(inst => `<div>• ${inst}</div>`).join('')}
               </div>
@@ -392,6 +416,67 @@
           resultDiv.style.border = isOperational ? '1px solid #c3e6cb' : '1px solid #f5c6cb';
         } else {
           throw new Error(data.error || 'Erro ao verificar status');
+        }
+      } catch (error) {
+        showResult(`Erro: ${error.message}`, 'error');
+      }
+    }
+
+    async function runDiagnostics() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Executando diagnóstico...';
+      resultDiv.style.background = '#f8f9fa';
+      resultDiv.style.border = '1px solid #dee2e6';
+
+      try {
+        const response = await fetch('/diagnostics');
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          const report = data.diagnostic_report;
+          const device = report.device_detection;
+          const validation = report.validation;
+          const diagnosis = report.diagnosis;
+
+          resultDiv.innerHTML = `
+            <div style="color: #17a2b8;">
+              <i class="fas fa-stethoscope"></i> <strong>Diagnóstico Móvel Completo</strong><br>
+
+              <div style="margin: 15px 0; padding: 10px; background: #f1f3f4; border-radius: 6px;">
+                <div><strong>📱 Dispositivo:</strong> ${report.summary.platform}</div>
+                <div><strong>🔍 Browser:</strong> ${device.browser.is_chrome ? 'Chrome' : device.browser.is_safari ? 'Safari' : device.browser.is_firefox ? 'Firefox' : 'Outro'}</div>
+                <div><strong>📊 Compatibilidade:</strong> ${report.summary.compatibility_score}%</div>
+                <div><strong>⚡ Método Recomendado:</strong> ${report.summary.recommended_method === 'qr' ? 'QR Code' : 'Código de Pareamento'}</div>
+              </div>
+
+              <div style="margin: 10px 0;">
+                <strong>🔧 Problemas Comuns:</strong>
+                ${diagnosis.common_issues.map(issue => `<div style="font-size: 12px;">• ${issue}</div>`).join('')}
+              </div>
+
+              <div style="margin: 10px 0;">
+                <strong>💡 Soluções Específicas:</strong>
+                ${diagnosis.specific_solutions.map(solution => `<div style="font-size: 12px;">• ${solution}</div>`).join('')}
+              </div>
+
+              <div style="margin: 10px 0;">
+                <strong>✅ Requisitos:</strong>
+                ${validation.requirements.map(req => `<div style="font-size: 12px;">• ${req}</div>`).join('')}
+              </div>
+
+              ${validation.warnings.length > 0 ? `
+              <div style="margin: 10px 0; color: #dc3545;">
+                <strong>⚠️ Avisos:</strong>
+                ${validation.warnings.map(warning => `<div style="font-size: 12px;">• ${warning}</div>`).join('')}
+              </div>
+              ` : ''}
+            </div>
+          `;
+          resultDiv.style.background = '#d1ecf1';
+          resultDiv.style.border = '1px solid #bee5eb';
+        } else {
+          throw new Error(data.error || 'Erro no diagnóstico');
         }
       } catch (error) {
         showResult(`Erro: ${error.message}`, 'error');

@@ -21,7 +21,8 @@
       "Bash(apt list:*)",
       "Bash(sudo apt-get:*)",
       "Read(//root/.cache/ms-playwright/**)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []
