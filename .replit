@@ -1,4 +1,4 @@
-modules = ["nodejs-18", "web", "nix"]
+modules = ["web", "nix", "nodejs-20"]
 
 [nix]
 channel = "stable-25_05"
@@ -23,12 +23,12 @@ args = "Knight Bot Terminal"
 name = "Knight Bot Terminal"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node bot-terminal.js"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node start.js"
 
 [[ports]]
 localPort = 5000
