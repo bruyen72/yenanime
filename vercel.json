@@ -28,7 +28,19 @@
       "destination": "/api/index"
     },
     {
+      "source": "/diagnostics",
+      "destination": "/api/index"
+    },
+    {
       "source": "/pair/status",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/baileys/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/shell/(.*)",
       "destination": "/api/index"
     },
     {

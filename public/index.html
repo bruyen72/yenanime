@@ -306,7 +306,7 @@
       resultDiv.style.border = '1px solid #dee2e6';
 
       try {
-        const response = await fetch(`/pair?number=${mobileNumber.replace(/[^0-9]/g, "")}`);
+        const response = await fetch(`/api/pair?number=${mobileNumber.replace(/[^0-9]/g, "")}`);
         const data = await response.json();
 
         if (response.ok && data.success) {
@@ -344,7 +344,7 @@
       resultDiv.style.border = '1px solid #dee2e6';
 
       try {
-        const response = await fetch('/qr');
+        const response = await fetch('/api/qr');
         const data = await response.json();
 
         if (response.ok && data.success) {
@@ -388,7 +388,7 @@
       resultDiv.style.border = '1px solid #dee2e6';
 
       try {
-        const response = await fetch('/status');
+        const response = await fetch('/api/status');
         const data = await response.json();
 
         if (response.ok && data.success) {
@@ -430,7 +430,7 @@
       resultDiv.style.border = '1px solid #dee2e6';
 
       try {
-        const response = await fetch('/diagnostics');
+        const response = await fetch('/api/diagnostics');
         const data = await response.json();
 
         if (response.ok && data.success) {

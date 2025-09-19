@@ -31,8 +31,9 @@ const {
     generateDiagnosticReport
 } = require('./mobile-diagnostics');
 
-const { getBaileysEngine } = require('./baileys-engine');
-const { getShellExecutor } = require('./shell-executor');
+// Comentado temporariamente para corrigir erro JSON
+// const { getBaileysEngine } = require('./baileys-engine');
+// const { getShellExecutor } = require('./shell-executor');
 
 // Configurações de ambiente
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'knight_bot_verify_2025';
@@ -41,12 +42,21 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN || 'knight_bot_verify_2025';
 const sessions = new Map();
 const qrCodes = new Map();
 
-// Instâncias dos engines
-const baileysEngine = getBaileysEngine();
-const shellExecutor = getShellExecutor();
+// Instâncias dos engines (comentado temporariamente)
+// const baileysEngine = getBaileysEngine();
+// const shellExecutor = getShellExecutor();
 
-// Logger avançado
-const logger = require('./logger');
+// Logger simplificado para Vercel
+const logger = {
+    info: (msg, data) => console.log(`[INFO] ${msg}`, data ? JSON.stringify(data) : ''),
+    error: (msg, error) => console.error(`[ERROR] ${msg}`, error?.message || error),
+    warn: (msg, data) => console.warn(`[WARN] ${msg}`, data || ''),
+    api: (method, path, data) => console.log(`[API] ${method} ${path}`, data ? JSON.stringify(data) : ''),
+    pairing: (action, sessionId, data) => console.log(`[PAIRING] ${action}`, { session_id: sessionId, ...data }),
+    qr: (action, qrId, data) => console.log(`[QR] ${action}`, { qr_id: qrId, ...data }),
+    mobile: (action, userAgent, data) => console.log(`[MOBILE] ${action}`, { user_agent: userAgent, ...data }),
+    whatsapp: (action, data) => console.log(`[WHATSAPP] ${action}`, data || {})
+};
 
 module.exports = async (req, res) => {
     // Headers CORS
@@ -396,190 +406,24 @@ module.exports = async (req, res) => {
             }
         }
 
-        // =================== BAILEYS REAL WHATSAPP ===================
+        // =================== BAILEYS E SHELL TEMPORARIAMENTE DESABILITADOS ===================
 
-        // Conectar via Baileys (método real)
-        if (pathname === '/baileys/connect' || pathname.includes('baileys/connect')) {
-            try {
-                await baileysEngine.initialize();
-                await baileysEngine.connect();
-
-                return res.status(200).json({
-                    success: true,
-                    message: 'Baileys engine started',
-                    status: await baileysEngine.getStatus(),
-                    timestamp: new Date().toISOString()
-                });
-            } catch (error) {
-                logger.error('Failed to start Baileys engine', error);
-                return res.status(500).json({
-                    success: false,
-                    error: 'BAILEYS_START_FAILED',
-                    message: error.message
-                });
-            }
+        // Endpoints Baileys desabilitados
+        if (pathname.includes('/baileys/')) {
+            return res.status(503).json({
+                success: false,
+                error: 'BAILEYS_TEMPORARILY_DISABLED',
+                message: 'Baileys engine temporariamente desabilitado para correção de bugs'
+            });
         }
 
-        // QR Code via Baileys
-        if (pathname === '/baileys/qr' || pathname.includes('baileys/qr')) {
-            try {
-                const status = await baileysEngine.getStatus();
-
-                if (!status.connected && status.qr_available) {
-                    return res.status(200).json({
-                        success: true,
-                        qr: baileysEngine.qrCode,
-                        type: 'baileys_real',
-                        note: 'QR Code REAL gerado pelo Baileys - Totalmente funcional',
-                        instructions: [
-                            '1. Abra o WhatsApp no seu celular',
-                            '2. Vá em Configurações → Aparelhos conectados',
-                            '3. Toque em "Conectar um aparelho"',
-                            '4. Escaneie este QR code REAL',
-                            '5. Aguarde a conexão automática'
-                        ],
-                        timestamp: new Date().toISOString()
-                    });
-                } else if (status.connected) {
-                    return res.status(200).json({
-                        success: true,
-                        message: 'WhatsApp já conectado via Baileys',
-                        user: status.user_info,
-                        timestamp: new Date().toISOString()
-                    });
-                } else {
-                    throw new Error('QR code não disponível. Inicie a conexão primeiro.');
-                }
-            } catch (error) {
-                logger.error('Baileys QR request failed', error);
-                return res.status(500).json({
-                    success: false,
-                    error: 'BAILEYS_QR_FAILED',
-                    message: error.message
-                });
-            }
-        }
-
-        // Pairing Code via Baileys
-        if (pathname === '/baileys/pair' || pathname.includes('baileys/pair')) {
-            const number = url.searchParams.get('number');
-
-            if (!number) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'MISSING_PHONE_NUMBER',
-                    message: 'Parâmetro "number" é obrigatório'
-                });
-            }
-
-            try {
-                await baileysEngine.initialize();
-                await baileysEngine.connect();
-
-                const pairingCode = await baileysEngine.requestPairingCode(number);
-
-                if (pairingCode) {
-                    return res.status(200).json({
-                        success: true,
-                        code: pairingCode,
-                        phone: number,
-                        type: 'baileys_real',
-                        note: 'Código de pareamento REAL do Baileys - Totalmente funcional',
-                        instructions: [
-                            '1. Abra o WhatsApp Business no seu celular',
-                            '2. Vá em Configurações → Aparelhos conectados',
-                            '3. Toque em "Conectar um aparelho"',
-                            '4. Toque em "Conectar com número de telefone"',
-                            `5. Digite o código: ${pairingCode}`,
-                            '6. Aguarde a confirmação automática'
-                        ],
-                        timestamp: new Date().toISOString()
-                    });
-                } else {
-                    throw new Error('Falha ao gerar código de pareamento');
-                }
-            } catch (error) {
-                logger.error('Baileys pairing failed', error);
-                return res.status(500).json({
-                    success: false,
-                    error: 'BAILEYS_PAIRING_FAILED',
-                    message: error.message
-                });
-            }
-        }
-
-        // Status do Baileys
-        if (pathname === '/baileys/status' || pathname.includes('baileys/status')) {
-            try {
-                const status = await baileysEngine.getStatus();
-                return res.status(200).json({
-                    success: true,
-                    baileys_status: status,
-                    timestamp: new Date().toISOString()
-                });
-            } catch (error) {
-                return res.status(500).json({
-                    success: false,
-                    error: 'BAILEYS_STATUS_FAILED',
-                    message: error.message
-                });
-            }
-        }
-
-        // =================== SHELL EXECUTOR ===================
-
-        // Executar comando shell
-        if (pathname === '/shell/exec' || pathname.includes('shell/exec')) {
-            const command = url.searchParams.get('cmd') || url.searchParams.get('command');
-
-            if (!command) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'MISSING_COMMAND',
-                    message: 'Parâmetro "cmd" ou "command" é obrigatório',
-                    example: '/shell/exec?cmd=ls'
-                });
-            }
-
-            try {
-                const result = await shellExecutor.executeCommand(command);
-
-                return res.status(200).json({
-                    success: true,
-                    command: command,
-                    result: result,
-                    timestamp: new Date().toISOString()
-                });
-            } catch (error) {
-                logger.error('Shell command execution failed', error, { command });
-                return res.status(400).json({
-                    success: false,
-                    error: 'COMMAND_EXECUTION_FAILED',
-                    message: error.message,
-                    command: command
-                });
-            }
-        }
-
-        // Histórico de comandos shell
-        if (pathname === '/shell/history' || pathname.includes('shell/history')) {
-            try {
-                const limit = parseInt(url.searchParams.get('limit') || '20');
-                const history = shellExecutor.getCommandHistory(limit);
-
-                return res.status(200).json({
-                    success: true,
-                    history: history,
-                    total_commands: history.length,
-                    timestamp: new Date().toISOString()
-                });
-            } catch (error) {
-                return res.status(500).json({
-                    success: false,
-                    error: 'HISTORY_FAILED',
-                    message: error.message
-                });
-            }
+        // Endpoints Shell desabilitados
+        if (pathname.includes('/shell/')) {
+            return res.status(503).json({
+                success: false,
+                error: 'SHELL_TEMPORARILY_DISABLED',
+                message: 'Shell executor temporariamente desabilitado para correção de bugs'
+            });
         }
 
         // =================== TESTE DE MENSAGEM ===================
