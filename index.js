@@ -247,11 +247,21 @@ async function startXeonBotInc() {
 
     XeonBotInc.serializeM = (m) => smsg(XeonBotInc, m, store)
 
-    // Handle pairing code
+    // Handle pairing code - Replit Web Interface Mode
     if (pairingCode && !XeonBotInc.authState.creds.registered) {
         if (useMobile) throw new Error('Cannot use pairing code with mobile api')
 
         let phoneNumber
+        
+        // No ambiente Replit, aguardar pairing via web interface apenas
+        const isReplit = process.env.REPLIT_DB_URL || process.env.REPL_SLUG || process.env.REPL_OWNER || !process.stdin.isTTY;
+        if (isReplit) {
+            console.log(chalk.green('🌐 Modo Web Interface - Aguardando pairing via interface web em /api/pair'));
+            console.log(chalk.cyan('📱 Acesse a interface web para gerar códigos de pareamento'));
+            console.log(chalk.yellow('⏳ Bot pronto para receber solicitações de pairing...'));
+            return XeonBotInc; // Retornar sem pedir input interativo
+        }
+        
         if (!!global.phoneNumber) {
             phoneNumber = global.phoneNumber
         } else {
