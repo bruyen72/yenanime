@@ -53,12 +53,5 @@
 
     # Clipboard
     pkgs.wl-clipboard-x11
-
-    # Dependências extras para Playwright
-    pkgs.at-spi2-atk
-    pkgs.at-spi2-core
-    pkgs.libxscrnsaver
-    pkgs.xvfb-run
-    pkgs.util-linux
   ];
 }
