@@ -2,7 +2,6 @@ modules = ["web", "nix", "nodejs-20"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["ffmpeg", "imagemagick", "glib", "nss", "dbus", "atk", "cups", "libxkbcommon", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXrandr", "mesa", "cairo", "pango", "alsa-lib", "chromium", "nspr", "libdrm", "gtk3", "expat", "libGL", "fontconfig", "liberation_ttf"]
 
 [agent]
 expertMode = true
@@ -28,7 +27,7 @@ outputType = "console"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node start.js"
+args = "npm install --force && npx playwright install chromium --with-deps && node start.js"
 
 [[ports]]
 localPort = 5000

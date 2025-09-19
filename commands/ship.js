@@ -22,8 +22,8 @@ let lastFetch = 0;
 const CACHE_DURATION = 1800000; // 30 minutos em milissegundos (reduzido para economizar memória)
 
 // Credenciais do Pinterest (Use variáveis de ambiente!)
-const PINTEREST_EMAIL = process.env.PINTEREST_EMAIL || '';
-const PINTEREST_PASSWORD = process.env.PINTEREST_PASSWORD || '';
+const PINTEREST_EMAIL = 'Brunoruthes92@gmail.com';
+const PINTEREST_PASSWORD = 'SOUL@hulk1';
 
 // Imagens de fallback mais confiáveis
 const FALLBACK_IMAGES = [
@@ -91,7 +91,7 @@ async function fetchAnimeShipImages() {
                 ]
             });
         }
-        
+
         context = await browser.newContext({
             userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             extraHTTPHeaders: {
@@ -104,7 +104,7 @@ async function fetchAnimeShipImages() {
             },
             viewport: { width: 1366, height: 768 }
         });
-        
+
         page = await context.newPage();
 
         // Tentar múltiplas fontes de imagens
@@ -139,7 +139,7 @@ async function fetchAnimeShipImages() {
             imageLinks = await page.evaluate(() => {
                 const images = document.querySelectorAll('img[src*="pinimg.com"]');
                 const links = [];
-                
+
                 images.forEach(img => {
                     let src = img.src;
                     if (src && src.includes('pinimg.com') && !src.includes('avatar') && !src.includes('profile')) {
@@ -151,7 +151,7 @@ async function fetchAnimeShipImages() {
                         }
                     }
                 });
-                
+
                 return links;
             });
 
@@ -163,7 +163,7 @@ async function fetchAnimeShipImages() {
 
         } catch (pinterestError) {
             console.warn('⚠️ Pinterest falhou, usando fontes alternativas...');
-            
+
             // Usar APIs de imagens gratuitas como fallback
             const unsplashQueries = [
                 'anime couple',
@@ -241,7 +241,7 @@ async function downloadImage(url, retries = 3) {
     for (let attempt = 1; attempt <= retries; attempt++) {
         try {
             console.log(`📥 Tentativa ${attempt}: Baixando imagem...`);
-            
+
             // Primeiro, tentar com axios
             const response = await axios.get(url, {
                 responseType: 'arraybuffer',
@@ -262,10 +262,10 @@ async function downloadImage(url, retries = 3) {
                 console.log('✅ Imagem baixada com sucesso via Axios!');
                 return Buffer.from(response.data);
             }
-            
+
         } catch (axiosError) {
             console.warn(`⚠️ Axios falhou (tentativa ${attempt}):`, axiosError.message);
-            
+
             // Fallback: usar Playwright para download
             try {
                 const isProduction = process.env.VERCEL || process.env.RENDER || process.env.NODE_ENV === 'production';
@@ -280,7 +280,6 @@ async function downloadImage(url, retries = 3) {
                 } else {
                     downloadBrowser = await chromium.launch({
                         headless: true,
-                        executablePath: '/usr/bin/chromium',
                         args: [
                             '--no-sandbox',
                             '--disable-setuid-sandbox',
@@ -326,13 +325,13 @@ async function downloadImage(url, retries = 3) {
                 console.warn(`⚠️ Playwright também falhou (tentativa ${attempt}):`, playwrightError.message);
             }
         }
-        
+
         // Aguardar antes da próxima tentativa
         if (attempt < retries) {
             await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
     }
-    
+
     throw new Error('Todas as tentativas de download falharam');
 }
 
@@ -370,7 +369,7 @@ async function shipCommand(sock, chatId, message, args) {
 async function shipCommandInternal(sock, chatId, message, args) {
     try {
         let user1, user2;
-        
+
         // Verificar menções
         const mentions = message.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
         const validMentions = mentions.filter(jid => jid && jid.endsWith('@s.whatsapp.net'));
@@ -393,18 +392,18 @@ async function shipCommandInternal(sock, chatId, message, args) {
                 const participants = groupData.participants
                     .map(p => p.id)
                     .filter(id => id.endsWith('@s.whatsapp.net'));
-                
+
                 if (participants.length < 2) {
                     return await sock.sendMessage(chatId, { 
                         text: '💔 *Grupo muito pequeno!*\n\nPreciso de pelo menos 2 pessoas para fazer um ship! 👥' 
                     });
                 }
-                
+
                 user1 = participants[Math.floor(Math.random() * participants.length)];
                 do {
                     user2 = participants[Math.floor(Math.random() * participants.length)];
                 } while (user2 === user1);
-                
+
             } catch (groupError) {
                 return await sock.sendMessage(chatId, { 
                     text: '❌ *Erro:* Não foi possível acessar os dados do grupo!\n\nTente marcar duas pessoas: `.ship @user1 @user2`' 
@@ -415,10 +414,10 @@ async function shipCommandInternal(sock, chatId, message, args) {
         // Buscar imagens
         console.log('🎨 Buscando imagem de anime ship...');
         const animeShipImages = await fetchAnimeShipImages();
-        
+
         // Calcular compatibilidade
         const compatibility = Math.floor(Math.random() * 101);
-        
+
         let status, emoji, description;
         if (compatibility >= 90) {
             status = 'ALMA GÊMEA! 💖✨';
@@ -444,14 +443,14 @@ async function shipCommandInternal(sock, chatId, message, args) {
 
         // Selecionar imagem aleatória
         const randomImgUrl = animeShipImages[Math.floor(Math.random() * animeShipImages.length)];
-        
+
         // Baixar imagem
         let imageBuffer;
         try {
             imageBuffer = await downloadImage(randomImgUrl);
         } catch (downloadError) {
             console.error('❌ Erro no download da imagem:', downloadError.message);
-            
+
             // Enviar apenas texto se falhar o download da imagem
             const shipTextOnly = `💘 *ANIME SHIP* 💘
 
@@ -499,16 +498,16 @@ ${emoji} @${user1.split('@')[0]} ❤️ @${user2.split('@')[0]}
 
     } catch (error) {
         console.error('❌ Erro geral no comando ship:', error.message);
-        
+
         await sock.sendMessage(chatId, {
             text: `❌ *Erro no Ship System*
 
 💔 Algo deu errado, mas não desista do amor!
 
 💡 *Como usar:*
-• \`.ship\` - Ship aleatório no grupo
-• \`.ship @user\` - Ship entre você e o usuário  
-• \`.ship @user1 @user2\` - Ship específico
+- \`.ship\` - Ship aleatório no grupo
+- \`.ship @user\` - Ship entre você e o usuário  
+- \`.ship @user1 @user2\` - Ship específico
 
 🔧 *Se o erro persistir, tente novamente em alguns minutos.*`
         });
